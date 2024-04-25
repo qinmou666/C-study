@@ -1,0 +1,141 @@
+#include<iostream>
+#include<vector>
+#define ROWS 10
+#define COLS 10
+using namespace std;
+struct Cpoint {
+	int cols;
+	int rows;
+	Cpoint(){}
+	bool operator==(Cpoint& test) {
+		if (test.cols == this->cols && test.rows == this->rows)
+			return true;
+		else
+			return false;
+	}
+	Cpoint(int x,int y):cols(x),rows(y) {
+
+	}
+};
+enum dir {
+	p_up,
+	p_left,
+	p_right,
+	p_dwon
+};
+struct  AuxiliaryMap
+{
+	int nVal;
+	bool ifFind;
+};
+struct MyTreeNode {
+	MyTreeNode(int row, int col) {
+		CurPos.cols = col;
+		CurPos.rows = row;
+		pParent = NULL;
+		child.clear();
+	}
+	Cpoint CurPos;//当前坐标
+	vector<MyTreeNode*> child;
+	MyTreeNode* pParent;
+
+};
+
+bool iscanwalk(AuxiliaryMap pathMap[ROWS][COLS],Cpoint pos) {
+	if (pathMap[pos.rows][pos.cols].ifFind)
+		return false;
+	if (pos.rows >= ROWS || pos.cols >= COLS || pos.rows < 0 || pos.cols < 0)
+		return false;
+	if (pathMap[pos.rows][pos.cols].nVal)
+		return false;
+	return true;
+}
+
+
+int main() {
+	int map[ROWS][COLS] = {
+		{0,1,1,1,1,1,1,0,0,0},
+		{0,0,0,0,0,0,0,0,1,1},
+		{0,1,1,0,1,0,1,1,1,0},
+		{0,0,0,0,1,0,1,1,1,0},
+		{0,1,1,1,1,0,1,1,1,0},
+		{0,0,0,0,0,0,1,1,1,0},
+		{0,1,1,1,1,1,1,1,1,0},
+		{0,1,1,1,1,1,1,1,1,0},
+		{0,1,1,1,1,1,1,1,1,0},
+		{0,1,1,1,1,1,1,1,1,0}
+	};
+	//初始化辅助地图
+	AuxiliaryMap pathMap[ROWS][COLS] = { 0 };
+	for (int i = 0; i < ROWS; i++)
+		for (int j = 0; j < COLS; j++)
+		{
+			pathMap[i][j].nVal = map[i][j];
+
+		}
+	//起始坐标与终点坐标
+	Cpoint beginPos(0, 0);
+	Cpoint endPos(9, 0);
+	//初始化树
+	MyTreeNode* pRoot = new MyTreeNode(beginPos.rows, beginPos.cols);
+	pathMap[beginPos.rows][beginPos.cols].ifFind = 1;
+
+	//数组当前层
+	vector<MyTreeNode*>CurrentTier;
+	CurrentTier.push_back(pRoot);
+	//下一层
+	vector<MyTreeNode*>NextTier;
+	Cpoint test;
+	MyTreeNode* pTemp = NULL;
+	while (1) {
+		NextTier.clear();
+		for (int i = 0; i < CurrentTier.size(); i++) {
+			for (int j = 0; j < 4; j++) {
+				test = CurrentTier[i]->CurPos;
+				switch (j)
+				{
+				case p_up:
+					test.rows--;
+					break;
+				case p_dwon:
+					test.rows++;
+					break;
+				case p_left:
+					test.cols--;
+					break;
+				case p_right:
+					test.cols++;
+					break;
+				}
+				//判断是否能走
+				if (iscanwalk(pathMap, test)) {
+					//	创建新节点，并且入树
+					pTemp = new MyTreeNode(test.rows, test.cols);
+					//新节点入树
+					CurrentTier[i]->child.push_back(pTemp);
+					//辅助地图标记走过
+					pathMap[test.rows][test.cols].ifFind = 1;
+					//为新节点的父节点赋值
+					pTemp->pParent = CurrentTier[i];
+					//下一层赋值
+					NextTier.push_back(pTemp);
+					if (test == endPos)
+						goto exit;
+
+				}
+			}
+		}
+		if (NextTier.size() == 0)
+			break;
+		//切换下一层
+		CurrentTier = NextTier;
+	}
+exit: {
+	while (pTemp)
+	{
+
+		cout << "(" << pTemp->CurPos.rows << ',' << pTemp->CurPos.cols << ")" << endl;
+		pTemp = pTemp->pParent;
+	}
+	}
+}
